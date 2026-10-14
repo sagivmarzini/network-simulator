@@ -1,14 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include "device.h"
+#include "ethernet.h"
 
 int main() {
 	srand(time(NULL));
 
-	Device nodeA = {.id = 1, .has_new_data = 0};
-	Device nodeB = {.id = 2, .has_new_data = 0};
+	Node nodeA = {.id = 1, .mac = {0xAA, 0x11}};
+	Node nodeB = {.id = 2, .mac = {0xBB, 0x22}};
 
 	Wire wire = {.endpoint_a = &nodeA, .endpoint_b = &nodeB, .is_busy = 0};
 
@@ -17,16 +19,25 @@ int main() {
 
 	while (current_tick < 50) {
 		if (current_tick == 5) {
-			uint8_t payload[] = "Hello Layer 1!";
-			wire_send(nodeA.wire, &nodeA, payload, sizeof(payload));
+			uint8_t payload[] = "Hello Ethernet!";
+
+			Packet packet = {0};
+			packet.data = packet.buffer + sizeof(packet.buffer) - sizeof(payload);
+			memcpy(packet.data, payload, sizeof(payload));
+			packet.length = sizeof(payload);
+
+			ethernet_send(&nodeA, &packet, nodeB.mac, TYPE_IPV4);
 		}
+
 
 		wire_tick(&wire);
 
-		if (nodeB.has_new_data) {
-			printf("[Tick %llu] Node %d processed rx_buffer: %s\n",
-			       current_tick, nodeB.id, nodeB.rx_buffer);
-			nodeB.has_new_data = 0;
+		if (nodeB.rx_packet.length) {
+			if (ethernet_receive(&nodeB, &nodeB.rx_packet) == NET_OK)
+				printf("[Tick %llu] Node %d processed rx_buffer: %s\n",
+				       current_tick, nodeB.id, (const char *) nodeB.rx_packet.data);
+
+			memset(&nodeB.rx_packet, 0, sizeof(Packet));
 		}
 
 		current_tick++;

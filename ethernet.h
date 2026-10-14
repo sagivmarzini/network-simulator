@@ -2,9 +2,14 @@
 #include "device.h"
 #include "packet.h"
 
-#define SIZE_MAC_ADDRESS 6
-#define MAX_SIZE_ETHERNET_DATA 1500
+#define TYPE_IPV4 0x0800
 
-NetResult ethernet_send(Device* device, Packet* packet, const uint8_t dest_mac[6], uint16_t ethertype);
+typedef struct __attribute__((packed)) {
+	uint8_t dest_mac[SIZE_MAC_ADDRESS], src_mac[SIZE_MAC_ADDRESS];
+	uint16_t type;
+} EthernetHeader;
 
-NetResult ethernet_receive(Device* device, Packet* packet);
+NetResult ethernet_send(const Node* sender, Packet* packet, const uint8_t dest_mac[SIZE_MAC_ADDRESS],
+                        uint16_t ethertype);
+
+NetResult ethernet_receive(Node* receiver, Packet* packet);

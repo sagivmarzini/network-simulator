@@ -6,19 +6,16 @@
 
 uint64_t current_tick = 0;
 
-void wire_send(Wire* w, const Device* sender, const uint8_t* data, int len) {
+NetResult wire_send(Wire* w, const Node* sender, const uint8_t* data, int len) {
 	if (sender != w->endpoint_a && sender != w->endpoint_b) {
-		printf("[Tick %llu] Error! Sender is sending data through remote wire.\n", current_tick);
-		return;
+		return NET_ERR_NO_ROUTE;
 	}
 	if (len > MAX_MTU) {
-		printf("[Tick %llu] Error! Data too long for wire.\n", current_tick);
-		return;
+		return NET_ERR_INVALID;
 	}
 
 	if (w->is_busy) {
-		printf("[Tick %llu] Collision! Wire is busy.\n", current_tick);
-		return; // Packet lost!
+		return NET_DROP;
 	}
 
 	memcpy(w->in_transit_data, data, len);
@@ -27,8 +24,7 @@ void wire_send(Wire* w, const Device* sender, const uint8_t* data, int len) {
 	w->is_busy = 1;
 	w->sent_from_a = sender == w->endpoint_a;
 
-	printf("[Tick %llu] Node %d sending %d bytes. Arrives at tick %llu\n",
-	       current_tick, sender->id, len, w->delivery_tick);
+	return NET_OK;
 }
 
 void wire_tick(Wire* w) {
@@ -50,10 +46,12 @@ void wire_tick(Wire* w) {
 			printf("[Tick %llu] WIRE CORRUPTED THE PACKET!\n", current_tick);
 		}
 
-		Device* receiver_device = w->sent_from_a ? w->endpoint_b : w->endpoint_a;
-		memcpy(receiver_device->rx_buffer, w->in_transit_data, w->in_transit_len);
-		receiver_device->rx_len = w->in_transit_len;
-		receiver_device->has_new_data = 1;
+		Node* receiver_device = w->sent_from_a ? w->endpoint_b : w->endpoint_a;
+
+		Packet* packet = &receiver_device->rx_packet;
+		packet->data = packet->buffer + sizeof(packet->buffer) - w->in_transit_len;
+		memcpy(packet->data, w->in_transit_data, w->in_transit_len);
+		packet->length = w->in_transit_len;
 
 		printf("[Tick %llu] Wire delivered %d bytes to Node %d\n",
 		       current_tick, w->in_transit_len, receiver_device->id);

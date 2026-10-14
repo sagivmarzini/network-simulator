@@ -2,11 +2,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "packet.h"
+
+
 #define MAX_MTU 1528 // Maximum Transmission Unit - the max size of a packet (in bytes) that a network device will accept
 
 
 
 #define WIRE_LATENCY_TICKS 10
+#define SIZE_MAC_ADDRESS 6
 
 extern uint64_t current_tick;
 
@@ -14,15 +18,14 @@ typedef struct Wire Wire;
 
 typedef struct {
 	int id;
+	uint8_t mac[SIZE_MAC_ADDRESS];
 	Wire* wire;
-	uint8_t rx_buffer[MAX_MTU];
-	int rx_len;
-	int has_new_data;
-} Device;
+	Packet rx_packet;
+} Node;
 
 typedef struct Wire {
-	Device* endpoint_a;
-	Device* endpoint_b;
+	Node* endpoint_a;
+	Node* endpoint_b;
 
 	uint8_t in_transit_data[MAX_MTU];
 	int in_transit_len;
@@ -33,7 +36,7 @@ typedef struct Wire {
 } Wire;
 
 // Function to inject data into the wire
-void wire_send(Wire* w, const Device* sender, const uint8_t* data, int len);
+NetResult wire_send(Wire* w, const Node* sender, const uint8_t* data, int len);
 
 // The function that runs every tick
 void wire_tick(Wire* w);
