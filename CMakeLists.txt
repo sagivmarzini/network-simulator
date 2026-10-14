@@ -8,4 +8,6 @@ add_executable(network-simulator
         main.c
         device.h
         device.c
+        ethernet.h
+        packet.h
 )

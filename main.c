@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -11,10 +12,13 @@ int main() {
 
 	Wire wire = {.endpoint_a = &nodeA, .endpoint_b = &nodeB, .is_busy = 0};
 
+	nodeA.wire = &wire;
+	nodeB.wire = &wire;
+
 	while (current_tick < 50) {
 		if (current_tick == 5) {
 			uint8_t payload[] = "Hello Layer 1!";
-			wire_send(&wire, &nodeA, payload, sizeof(payload));
+			wire_send(nodeA.wire, &nodeA, payload, sizeof(payload));
 		}
 
 		wire_tick(&wire);

@@ -1,5 +1,7 @@
 #include "device.h"
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 uint64_t current_tick = 0;

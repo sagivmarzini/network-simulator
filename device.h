@@ -1,10 +1,8 @@
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 
-#define MAX_MTU 1500 // Maximum Transmission Unit - the max size of a packet (in bytes) that a network device will accept
+#define MAX_MTU 1528 // Maximum Transmission Unit - the max size of a packet (in bytes) that a network device will accept
 
 
 
@@ -12,14 +10,17 @@
 
 extern uint64_t current_tick;
 
+typedef struct Wire Wire;
+
 typedef struct {
 	int id;
+	Wire* wire;
 	uint8_t rx_buffer[MAX_MTU];
 	int rx_len;
 	int has_new_data;
 } Device;
 
-typedef struct {
+typedef struct Wire {
 	Device* endpoint_a;
 	Device* endpoint_b;
 
