@@ -3,7 +3,7 @@
 #include <string.h>
 #include <zlib.h>
 
-NetResult ethernet_send(const Node* sender, Packet* packet, const uint8_t dest_mac[SIZE_MAC_ADDRESS],
+NetResult ethernet_send(const Host* sender, Packet* packet, const uint8_t dest_mac[SIZE_MAC_ADDRESS],
                         uint16_t ethertype) {
 	EthernetHeader header = {0};
 
@@ -22,7 +22,7 @@ NetResult ethernet_send(const Node* sender, Packet* packet, const uint8_t dest_m
 	crc = crc32(crc, packet->data, packet->length - SIZE_FCS);
 	memcpy(packet->data + packet->length - SIZE_FCS, &crc, SIZE_FCS);
 
-	return wire_send(sender->wire, sender, packet->data, packet->length);
+	return device_send((Device *) sender, 0, packet->data, packet->length);
 }
 
 static bool isCrcCorrect(Packet* packet) {
@@ -35,11 +35,11 @@ static bool isCrcCorrect(Packet* packet) {
 	return received_crc == crc;
 }
 
-NetResult ethernet_receive(const Node* receiver, Packet* packet) {
+NetResult ethernet_receive(const Host* receiver, Packet* packet) {
 	EthernetHeader header = {0};
 	memcpy(&header, packet->data, sizeof(header));
 
-	// Check if dest MAC is to this device
+	// Check if dest MAC is to this host
 	if (memcmp(&header.dest_mac, &receiver->mac, SIZE_MAC_ADDRESS) != 0) return NET_DROP;
 	// Check if the frame is corrupted
 	if (!isCrcCorrect(packet)) return NET_ERR_INVALID;

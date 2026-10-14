@@ -10,7 +10,7 @@ typedef struct __attribute__((packed)) {
 	uint16_t type;
 } EthernetHeader;
 
-NetResult ethernet_send(const Node* sender, Packet* packet, const uint8_t dest_mac[SIZE_MAC_ADDRESS],
+NetResult ethernet_send(const Host* sender, Packet* packet, const uint8_t dest_mac[SIZE_MAC_ADDRESS],
                         uint16_t ethertype);
 
-NetResult ethernet_receive(const Node* receiver, Packet* packet);
+NetResult ethernet_receive(const Host* receiver, Packet* packet);
