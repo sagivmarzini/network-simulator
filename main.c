@@ -3,7 +3,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "device.h"
+#include "physical.h"
 #include "ethernet.h"
 
 int main() {
@@ -22,9 +22,9 @@ int main() {
 			uint8_t payload[] = "Hello Ethernet!";
 
 			Packet packet = {0};
-			packet.data = packet.buffer + sizeof(packet.buffer) - sizeof(payload);
+			packet.data = packet.buffer + sizeof(packet.buffer) - sizeof(payload) - SIZE_FCS;
 			memcpy(packet.data, payload, sizeof(payload));
-			packet.length = sizeof(payload);
+			packet.length = sizeof(payload) + SIZE_FCS;
 
 			ethernet_send(&nodeA, &packet, nodeB.mac, TYPE_IPV4);
 		}
